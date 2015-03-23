@@ -28,19 +28,20 @@ import org.junit.Test;
 import aQute.bnd.annotation.headers.ProvideCapability;
 
 @ProvideCapability(ns = ECMExtenderConstants.CAPABILITY_NS_COMPONENT,
-        value = ECMExtenderConstants.CAPABILITY_ATTR_CLASS + "="
-                + "org.everit.osgi.ecm.extender.ri.tests.TestComponent")
+    value = ECMExtenderConstants.CAPABILITY_ATTR_CLASS + "="
+        + "org.everit.osgi.ecm.extender.ri.tests.TestComponent")
 @Component
 @Service
 @StringAttributes({
-        @StringAttribute(attributeId = TestRunnerConstants.SERVICE_PROPERTY_TEST_ID, defaultValue = "simpleTest"),
-        @StringAttribute(attributeId = TestRunnerConstants.SERVICE_PROPERTY_TESTRUNNER_ENGINE_TYPE,
-                defaultValue = "junit4") })
+    @StringAttribute(attributeId = TestRunnerConstants.SERVICE_PROPERTY_TEST_ID,
+        defaultValue = "simpleTest"),
+    @StringAttribute(attributeId = TestRunnerConstants.SERVICE_PROPERTY_TESTRUNNER_ENGINE_TYPE,
+        defaultValue = "junit4") })
 public class TestComponent {
 
-    @Test
-    @TestDuringDevelopment
-    public void testThatComponentIsAlive() {
+  @Test
+  @TestDuringDevelopment
+  public void testThatComponentIsAlive() {
 
-    }
+  }
 }
