@@ -40,7 +40,7 @@ import aQute.bnd.annotation.headers.ProvideCapability;
  * Tracks the <code>org.everit.osgi.ecm.component</code> bundle capabilities and registers the
  * offered components.
  */
-@ProvideCapability(ns = "org.everit.osgi.ecm.component.tracker", value = "impl=ri",
+@ProvideCapability(ns = "org.everit.osgi.ecm.component.tracker", value = "name=ri",
     version = "1.0.0")
 public class ECMCapabilityTracker extends BundleTracker<Bundle> {
 
