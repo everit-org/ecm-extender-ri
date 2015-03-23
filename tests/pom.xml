@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>org.everit.osgi.ecm.extender.ri.tests</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>1.0.0</version>
 
   <packaging>bundle</packaging>
   <name>Everit - ECM Extender RI Tests</name>
@@ -47,7 +47,7 @@
         <configuration>
           <instructions>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
-            <EOSGi-TestNum>0</EOSGi-TestNum>
+            <EOSGi-TestNum>1</EOSGi-TestNum>
           </instructions>
         </configuration>
       </plugin>
@@ -67,7 +67,7 @@
               <framework>felix</framework>
               <systemProperties>
                 <jetty.home.bundle>org.eclipse.jetty.osgi.boot</jetty.home.bundle>
-                <jetty.port>8081</jetty.port>
+                <jetty.port>$${ if (System.getenv("EOSGI_STOP_AFTER_TESTS").equals("true")) "0"; else "4848"; }</jetty.port>
                 <!--<felix.cm.dir>${wrapper_home}/../conf/configadmin</felix.cm.dir>-->
               </systemProperties>
               <vmOptions>
