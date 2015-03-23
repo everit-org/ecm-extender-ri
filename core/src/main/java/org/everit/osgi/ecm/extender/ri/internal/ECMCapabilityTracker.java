@@ -1,18 +1,17 @@
-/**
- * This file is part of Everit - ECM Extender RI.
+/*
+ * Copyright (C) 2011 Everit Kft. (http://www.everit.org)
  *
- * Everit - ECM Extender RI is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Everit - ECM Extender RI is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Everit - ECM Extender RI.  If not, see <http://www.gnu.org/licenses/>.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package org.everit.osgi.ecm.extender.ri.internal;
 
@@ -24,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.everit.osgi.ecm.annotation.metadatabuilder.MetadataBuilder;
 import org.everit.osgi.ecm.component.ri.ComponentContainerFactory;
 import org.everit.osgi.ecm.component.ri.ComponentContainerInstance;
+import org.everit.osgi.ecm.extender.ComponentClassNotFoundException;
+import org.everit.osgi.ecm.extender.MissingClassAttribute;
 import org.everit.osgi.ecm.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -35,11 +36,16 @@ import org.osgi.util.tracker.BundleTracker;
 
 import aQute.bnd.annotation.headers.ProvideCapability;
 
+/**
+ * Tracks the <code>org.everit.osgi.ecm.component</code> bundle capabilities and registers the
+ * offered components.
+ */
 @ProvideCapability(ns = "org.everit.osgi.ecm.component.tracker", value = "impl=ri",
     version = "1.0.0")
 public class ECMCapabilityTracker extends BundleTracker<Bundle> {
 
-  private final Map<Bundle, List<ComponentContainerInstance<?>>> activeComponentContainers = new ConcurrentHashMap<Bundle, List<ComponentContainerInstance<?>>>();
+  private final Map<Bundle, List<ComponentContainerInstance<?>>> activeComponentContainers =
+      new ConcurrentHashMap<Bundle, List<ComponentContainerInstance<?>>>();
 
   public ECMCapabilityTracker(final BundleContext context) {
     super(context, Bundle.ACTIVE, null);
@@ -73,14 +79,11 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
               factory.createComponentContainer(componentMetadata);
 
           containers.add(containerInstance);
-        } catch (Exception e) {
-          // TODO
-          e.printStackTrace();
-          return null;
+        } catch (ClassNotFoundException e) {
+          throw new ComponentClassNotFoundException(capability, e);
         }
       } else {
-        // TODO
-        throw new RuntimeException("Class is not defined in capability: " + capability.toString());
+        throw new MissingClassAttribute(capability);
       }
     }
 
