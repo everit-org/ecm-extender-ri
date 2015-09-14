@@ -15,25 +15,67 @@
  */
 package org.everit.osgi.ecm.extender.ri.internal;
 
+import java.lang.reflect.Method;
+
+import org.everit.osgi.ecm.component.ri.ComponentContainerFactory;
+import org.everit.osgi.ecm.component.ri.ComponentContainerInstance;
+import org.everit.osgi.ecm.metadata.AttributeMetadata;
+import org.everit.osgi.ecm.metadata.ComponentMetadata;
+import org.everit.osgi.ecm.metadata.ComponentMetadata.ComponentMetadataBuilder;
+import org.everit.osgi.ecm.metadata.ReferenceConfigurationType;
+import org.everit.osgi.ecm.metadata.ServiceReferenceMetadata.ServiceReferenceMetadataBuilder;
+import org.everit.osgi.ecm.util.method.MethodDescriptor;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 
 /**
- * Activator of the bundle that opens {@link ECMCapabilityTracker}.
+ * Activator of the bundle that starts the {@link ECMExtenderComponent} component.
  */
 public class ECMExtenderActivator implements BundleActivator {
 
-  private ECMCapabilityTracker tracker;
+  private ComponentContainerInstance<Object> ecmExtenderComponent;
 
   @Override
   public void start(final BundleContext context) throws Exception {
-    tracker = new ECMCapabilityTracker(context);
-    tracker.open();
+    ComponentContainerFactory factory = new ComponentContainerFactory(context);
+
+    Class<ECMExtenderComponent> clazz = ECMExtenderComponent.class;
+    ComponentMetadataBuilder ecmExtenderComponentMetadataBuilder = new ComponentMetadataBuilder();
+    ecmExtenderComponentMetadataBuilder.withType(clazz.getName());
+
+    Method activateMethod = clazz.getDeclaredMethod("activate", BundleContext.class);
+    ecmExtenderComponentMetadataBuilder.withActivate(new MethodDescriptor(activateMethod));
+
+    Method deactivateMethod = clazz.getDeclaredMethod("deactivate");
+    ecmExtenderComponentMetadataBuilder.withDeactivate(new MethodDescriptor(deactivateMethod));
+
+    String logServiceFilter = System.getProperty("org.everit.osgi.ecm.extender.ri.logservice");
+    if (logServiceFilter != null) {
+      ServiceReferenceMetadataBuilder serviceReferenceMetadatabuilder =
+          new ServiceReferenceMetadataBuilder();
+      serviceReferenceMetadatabuilder = serviceReferenceMetadatabuilder
+          .withDefaultValue(new String[] { logServiceFilter })
+          .withReferenceId("logService")
+          .withReferenceConfigurationType(ReferenceConfigurationType.FILTER)
+          .withServiceInterface(LogService.class);
+
+      Method setLogServiceMethod = clazz.getDeclaredMethod("setLogService", LogService.class);
+      serviceReferenceMetadatabuilder.withSetter(new MethodDescriptor(setLogServiceMethod));
+
+      AttributeMetadata<String[]> attributeMetadata = serviceReferenceMetadatabuilder.build();
+      ecmExtenderComponentMetadataBuilder
+          .withAttributes(new AttributeMetadata<?>[] { attributeMetadata });
+    }
+
+    ComponentMetadata build = ecmExtenderComponentMetadataBuilder.build();
+    ecmExtenderComponent = factory.createComponentContainer(build);
+    ecmExtenderComponent.open();
   }
 
   @Override
   public void stop(final BundleContext context) throws Exception {
-    tracker.close();
+    ecmExtenderComponent.close();
   }
 
 }
