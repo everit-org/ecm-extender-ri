@@ -67,7 +67,7 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
     }
     List<BundleCapability> capabilities = wiring.getCapabilities("org.everit.osgi.ecm.component");
 
-    if ((capabilities == null) || (capabilities.size() == 0)) {
+    if (capabilities == null || capabilities.size() == 0) {
       return null;
     }
 
@@ -128,8 +128,7 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
 
     for (BundleWire bundleWire : trackerWires) {
       BundleCapability capability = bundleWire.getCapability();
-      if ((capability != null)
-          && capability.getRevision().getBundle().equals(context.getBundle())) {
+      if (capability != null && capability.getRevision().getBundle().equals(context.getBundle())) {
         return false;
       }
     }
