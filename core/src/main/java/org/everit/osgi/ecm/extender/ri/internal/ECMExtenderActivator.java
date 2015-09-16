@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 
 import org.everit.osgi.ecm.component.ri.ComponentContainerFactory;
 import org.everit.osgi.ecm.component.ri.ComponentContainerInstance;
+import org.everit.osgi.ecm.extender.ri.ECMExtenderRiConstants;
 import org.everit.osgi.ecm.metadata.AttributeMetadata;
 import org.everit.osgi.ecm.metadata.ComponentMetadata;
 import org.everit.osgi.ecm.metadata.ComponentMetadata.ComponentMetadataBuilder;
@@ -50,7 +51,8 @@ public class ECMExtenderActivator implements BundleActivator {
     Method deactivateMethod = clazz.getDeclaredMethod("deactivate");
     ecmExtenderComponentMetadataBuilder.withDeactivate(new MethodDescriptor(deactivateMethod));
 
-    String logServiceFilter = System.getProperty("org.everit.osgi.ecm.extender.ri.logservice");
+    String logServiceFilter =
+        System.getProperty(ECMExtenderRiConstants.SYSTEM_PROPERTY_LOGSERVICE_FILER);
     if (logServiceFilter != null) {
       ServiceReferenceMetadataBuilder serviceReferenceMetadatabuilder =
           new ServiceReferenceMetadataBuilder();

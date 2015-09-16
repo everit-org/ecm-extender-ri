@@ -81,7 +81,7 @@
           <instructions>
             <Bundle-Activator>org.everit.osgi.ecm.extender.ri.internal.ECMExtenderActivator</Bundle-Activator>
             <Import-Package>org.everit.osgi.ecm.extender;version="[1.0,2)",*</Import-Package>
-            <Export-Package />
+            <Export-Package>org.everit.osgi.ecm.extender.ri</Export-Package>
           </instructions>
         </configuration>
       </plugin>
