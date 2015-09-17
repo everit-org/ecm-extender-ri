@@ -32,6 +32,7 @@ import org.osgi.framework.BundleEvent;
 import org.osgi.framework.wiring.BundleCapability;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.BundleTracker;
 
 import aQute.bnd.annotation.headers.ProvideCapability;
@@ -47,8 +48,15 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
   private final Map<Bundle, List<ComponentContainerInstance<?>>> activeComponentContainers =
       new ConcurrentHashMap<Bundle, List<ComponentContainerInstance<?>>>();
 
+  private LogService logService;
+
   public ECMCapabilityTracker(final BundleContext context) {
     super(context, Bundle.ACTIVE, null);
+  }
+
+  public ECMCapabilityTracker(final BundleContext context, final LogService logService) {
+    super(context, Bundle.ACTIVE, null);
+    this.logService = logService;
   }
 
   @Override
@@ -63,7 +71,13 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
       return null;
     }
 
-    ComponentContainerFactory factory = new ComponentContainerFactory(bundle.getBundleContext());
+    ComponentContainerFactory factory = null;
+    if (logService != null) {
+      factory = new ComponentContainerFactory(bundle.getBundleContext(), logService);
+    } else {
+      factory = new ComponentContainerFactory(bundle.getBundleContext());
+    }
+
     // Having two iterations separately as if there is an exception during generating the metadata
     // or loading the
     // class, none of the containers should be started.
