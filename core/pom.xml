@@ -23,12 +23,12 @@
   <parent>
     <groupId>org.everit.config</groupId>
     <artifactId>org.everit.config.oss</artifactId>
-    <version>7.0.1</version>
+    <version>7.3.0</version>
   </parent>
 
   <groupId>org.everit.osgi</groupId>
   <artifactId>org.everit.osgi.ecm.extender.ri</artifactId>
-  <version>2.0.0</version>
+  <version>3.0.0-SNAPSHOT</version>
   <packaging>bundle</packaging>
 
   <name>Everit - ECM Extender RI</name>
@@ -80,7 +80,6 @@
         <configuration>
           <instructions>
             <Bundle-Activator>org.everit.osgi.ecm.extender.ri.internal.ECMExtenderActivator</Bundle-Activator>
-            <Import-Package>org.everit.osgi.ecm.extender;version="[1.0,2)",*</Import-Package>
             <Export-Package>org.everit.osgi.ecm.extender.ri</Export-Package>
           </instructions>
         </configuration>
@@ -92,28 +91,28 @@
     <dependency>
       <groupId>org.everit.osgi</groupId>
       <artifactId>org.everit.osgi.ecm.component.ri</artifactId>
-      <version>2.0.0</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.everit.osgi</groupId>
       <artifactId>org.everit.osgi.ecm.annotation.metadatabuilder</artifactId>
-      <version>2.0.0</version>
+      <version>3.0.0</version>
     </dependency>
     <dependency>
       <groupId>org.everit.osgi</groupId>
       <artifactId>org.everit.osgi.ecm.extender.api</artifactId>
-      <version>1.0.0</version>
+      <version>3.0.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>biz.aQute.bnd</groupId>
-      <artifactId>bndlib</artifactId>
-      <version>2.4.0</version>
+      <artifactId>biz.aQute.bndlib</artifactId>
+      <version>3.1.0</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <version>6.0.0</version>
+      <version>5.0.0</version>
       <scope>provided</scope>
     </dependency>
 

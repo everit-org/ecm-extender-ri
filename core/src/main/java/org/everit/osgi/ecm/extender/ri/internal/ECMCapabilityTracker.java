@@ -24,7 +24,7 @@ import org.everit.osgi.ecm.annotation.metadatabuilder.MetadataBuilder;
 import org.everit.osgi.ecm.component.ri.ComponentContainerFactory;
 import org.everit.osgi.ecm.component.ri.ComponentContainerInstance;
 import org.everit.osgi.ecm.extender.ComponentClassNotFoundException;
-import org.everit.osgi.ecm.extender.MissingClassAttribute;
+import org.everit.osgi.ecm.extender.MissingClassAttributeException;
 import org.everit.osgi.ecm.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -97,7 +97,7 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
           throw new ComponentClassNotFoundException(capability, e);
         }
       } else {
-        throw new MissingClassAttribute(capability);
+        throw new MissingClassAttributeException(capability);
       }
     }
 
