@@ -16,6 +16,7 @@
 package org.everit.osgi.ecm.extender.ri.internal;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,15 +24,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.everit.osgi.ecm.annotation.metadatabuilder.MetadataBuilder;
 import org.everit.osgi.ecm.component.ri.ComponentContainerFactory;
 import org.everit.osgi.ecm.component.ri.ComponentContainerInstance;
-import org.everit.osgi.ecm.extender.ComponentClassNotFoundException;
-import org.everit.osgi.ecm.extender.MissingClassAttributeException;
+import org.everit.osgi.ecm.extender.ECMExtenderConstants;
+import org.everit.osgi.ecm.extender.ri.ComponentClassNotFoundException;
+import org.everit.osgi.ecm.extender.ri.MissingClassAttributeException;
 import org.everit.osgi.ecm.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleEvent;
-import org.osgi.framework.wiring.BundleCapability;
+import org.osgi.framework.wiring.BundleRequirement;
 import org.osgi.framework.wiring.BundleWire;
 import org.osgi.framework.wiring.BundleWiring;
+import org.osgi.namespace.extender.ExtenderNamespace;
 import org.osgi.service.log.LogService;
 import org.osgi.util.tracker.BundleTracker;
 
@@ -41,8 +44,8 @@ import aQute.bnd.annotation.headers.ProvideCapability;
  * Tracks the <code>org.everit.osgi.ecm.component</code> bundle capabilities and registers the
  * offered components.
  */
-@ProvideCapability(ns = "org.everit.osgi.ecm.component.tracker", value = "name=ri",
-    version = "1.0.0")
+@ProvideCapability(ns = ExtenderNamespace.EXTENDER_NAMESPACE,
+    name = ECMExtenderConstants.EXTENDER_SYMBOLIC_NAME, version = "3.0.0")
 public class ECMCapabilityTracker extends BundleTracker<Bundle> {
 
   private final Map<Bundle, List<ComponentContainerInstance<?>>> activeComponentContainers =
@@ -61,15 +64,14 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
 
   @Override
   public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
-    BundleWiring wiring = bundle.adapt(BundleWiring.class);
-    if (wiredOnlyToOtherTracker(wiring)) {
-      return null;
-    }
-    List<BundleCapability> capabilities = wiring.getCapabilities("org.everit.osgi.ecm.component");
+    Collection<BundleRequirement> wiredRequirements = resolveWiredRequirements(bundle);
 
-    if (capabilities == null || capabilities.size() == 0) {
+    if (wiredRequirements.size() == 0) {
       return null;
     }
+
+    BundleWiring wiring = bundle.adapt(BundleWiring.class);
+    ClassLoader classLoader = wiring.getClassLoader();
 
     ComponentContainerFactory factory = null;
     if (logService != null) {
@@ -82,23 +84,28 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
     // or loading the
     // class, none of the containers should be started.
     List<ComponentContainerInstance<?>> containers = new ArrayList<ComponentContainerInstance<?>>();
-    for (BundleCapability capability : capabilities) {
-      Object clazzAttribute = capability.getAttributes().get("class");
-      if (clazzAttribute != null) {
-        String clazz = String.valueOf(clazzAttribute);
-        try {
-          Class<?> type = bundle.loadClass(clazz);
-          ComponentMetadata componentMetadata = MetadataBuilder.buildComponentMetadata(type);
-          ComponentContainerInstance<Object> containerInstance =
-              factory.createComponentContainer(componentMetadata);
 
-          containers.add(containerInstance);
-        } catch (ClassNotFoundException e) {
-          throw new ComponentClassNotFoundException(capability, e);
-        }
-      } else {
-        throw new MissingClassAttributeException(capability);
+    for (BundleRequirement requirement : wiredRequirements) {
+      Object classNameAttribute =
+          requirement.getAttributes().get(ECMExtenderConstants.REQUIREMENT_ATTR_CLASS);
+
+      if (classNameAttribute == null) {
+        throw new MissingClassAttributeException(requirement);
       }
+
+      String className = classNameAttribute.toString();
+      Class<?> clazz;
+      try {
+        clazz = classLoader.loadClass(className);
+      } catch (ClassNotFoundException e) {
+        throw new ComponentClassNotFoundException(requirement, e);
+      }
+
+      ComponentMetadata componentMetadata = MetadataBuilder.buildComponentMetadata(clazz);
+      ComponentContainerInstance<Object> containerInstance =
+          factory.createComponentContainer(componentMetadata);
+
+      containers.add(containerInstance);
     }
 
     for (ComponentContainerInstance<?> container : containers) {
@@ -118,21 +125,26 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
     }
   }
 
-  private boolean wiredOnlyToOtherTracker(final BundleWiring wiring) {
-    List<BundleWire> trackerWires = wiring
-        .getRequiredWires("org.everit.osgi.ecm.component.tracker");
+  private Collection<BundleRequirement> resolveWiredRequirements(final Bundle bundle) {
+    BundleWiring bundleWiring = bundle.adapt(BundleWiring.class);
+    List<BundleRequirement> result = new ArrayList<>();
 
-    if (trackerWires.size() == 0) {
-      return false;
-    }
+    List<BundleWire> extenderWires =
+        bundleWiring.getRequiredWires(ExtenderNamespace.EXTENDER_NAMESPACE);
 
-    for (BundleWire bundleWire : trackerWires) {
-      BundleCapability capability = bundleWire.getCapability();
-      if (capability != null && capability.getRevision().getBundle().equals(context.getBundle())) {
-        return false;
+    Bundle extenderBundle = this.context.getBundle();
+
+    for (BundleWire bundleWire : extenderWires) {
+      if (extenderBundle.equals(bundleWire.getProviderWiring().getBundle())) {
+
+        Map<String, Object> capabilityAttributes = bundleWire.getCapability().getAttributes();
+        if (ECMExtenderConstants.EXTENDER_SYMBOLIC_NAME
+            .equals(capabilityAttributes.get(ExtenderNamespace.EXTENDER_NAMESPACE))) {
+          BundleRequirement requirement = bundleWire.getRequirement();
+          result.add(requirement);
+        }
       }
     }
-
-    return true;
+    return result;
   }
 }
