@@ -60,7 +60,7 @@ public class ECMExtenderActivator implements BundleActivator {
           .withDefaultValue(new String[] { logServiceFilter })
           .withReferenceId("logService")
           .withReferenceConfigurationType(ReferenceConfigurationType.FILTER)
-          .withServiceInterface(LogService.class);
+          .withServiceInterface(LogService.class.getName());
 
       Method setLogServiceMethod = clazz.getDeclaredMethod("setLogService", LogService.class);
       serviceReferenceMetadatabuilder.withSetter(new MethodDescriptor(setLogServiceMethod));
