@@ -43,7 +43,9 @@ public class ECMExtenderActivator implements BundleActivator {
 
     Class<ECMExtenderComponent> clazz = ECMExtenderComponent.class;
     ComponentMetadataBuilder ecmExtenderComponentMetadataBuilder = new ComponentMetadataBuilder();
-    ecmExtenderComponentMetadataBuilder.withType(clazz.getName());
+    ecmExtenderComponentMetadataBuilder.withType(clazz.getName())
+        .withComponentId(ECMExtenderComponent.COMPONENT_ID).withLabel(ECMExtenderComponent.LABEL)
+        .withDescription(ECMExtenderComponent.DESCRIPTION);
 
     Method activateMethod = clazz.getDeclaredMethod("activate", BundleContext.class);
     ecmExtenderComponentMetadataBuilder.withActivate(new MethodDescriptor(activateMethod));

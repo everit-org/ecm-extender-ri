@@ -18,10 +18,24 @@ package org.everit.osgi.ecm.extender.ri.internal;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
+import aQute.bnd.annotation.headers.ProvideCapability;
+
 /**
  * Component that opens {@link ECMCapabilityTracker}.
  */
+@ProvideCapability(ns = "org.everit.osgi.ecm.component",
+    value = "componentId=\"" + ECMExtenderComponent.COMPONENT_ID + "\";class=\"${@class}\";label=\""
+        + ECMExtenderComponent.LABEL + "\";description=\"" + ECMExtenderComponent.DESCRIPTION
+        + "\"",
+    version = "3.0.0")
 public class ECMExtenderComponent {
+
+  public static final String COMPONENT_ID = "org.everit.osgi.ecm.extender.ECMExtender";
+
+  public static final String DESCRIPTION = "Pickes up ECM Components automatically based on bundle"
+      + " wirings as it is specified in ECM documentation.";
+
+  public static final String LABEL = "Everit ECM Extender";
 
   private LogService logService;
 
