@@ -28,7 +28,7 @@
 
   <groupId>org.everit.osgi</groupId>
   <artifactId>org.everit.osgi.ecm.extender.ri</artifactId>
-  <version>3.0.0</version>
+  <version>3.0.1</version>
   <packaging>bundle</packaging>
 
   <name>Everit - ECM Extender RI</name>
@@ -91,7 +91,7 @@
     <dependency>
       <groupId>org.everit.osgi</groupId>
       <artifactId>org.everit.osgi.ecm.component.ri</artifactId>
-      <version>3.0.0</version>
+      <version>3.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.everit.osgi</groupId>

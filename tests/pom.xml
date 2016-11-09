@@ -28,7 +28,7 @@
   </parent>
 
   <artifactId>org.everit.osgi.ecm.extender.ri.tests</artifactId>
-  <version>3.0.0</version>
+  <version>3.0.1</version>
 
   <packaging>bundle</packaging>
   <name>Everit - ECM Extender RI Tests</name>
@@ -54,26 +54,26 @@
       <plugin>
         <groupId>org.everit.osgi.dev</groupId>
         <artifactId>eosgi-maven-plugin</artifactId>
-        <version>3.3.3</version>
+        <version>4.0.3</version>
         <configuration>
-          <sourceDistPath>${source.dist.folder}</sourceDistPath>
-          <jacoco>
-            <includes>org.everit.osgi.ecm.extender.ri.internal.*</includes>
-            <output>$${ if (System.getenv("EOSGI_STOP_AFTER_TESTS").equals("true")) "file"; else "tcpserver"; }</output>
-          </jacoco>
           <environments>
             <environment>
               <id>ecmFelix</id>
               <framework>felix</framework>
-              <systemProperties>
-                <jetty.home.bundle>org.eclipse.jetty.osgi.boot</jetty.home.bundle>
-                <jetty.port>$${ if (System.getenv("EOSGI_STOP_AFTER_TESTS").equals("true")) "0"; else "4848"; }</jetty.port>
-                <!--<felix.cm.dir>${wrapper_home}/../conf/configadmin</felix.cm.dir>-->
-              </systemProperties>
-              <vmOptions>
-                <vmOption>-Xdebug</vmOption>
-                <vmOption>-Xrunjdwp:server=y,transport=dt_socket,address=4000,suspend=n</vmOption>
-              </vmOptions>
+              <launchConfig>
+                <vmArguments>
+                  <jetty.home.bundle>-Djetty.home.bundle=org.eclipse.jetty.osgi.boot</jetty.home.bundle>
+                  <jetty.port>-Djetty.port=4848</jetty.port>
+                </vmArguments>
+                <overrides>
+                  <override>
+                    <useBy>INTEGRATION_TEST</useBy>
+                    <vmArguments>
+                      <jetty.port>-Djetty.port=0</jetty.port>
+                    </vmArguments>
+                  </override>
+                </overrides>
+              </launchConfig>
             </environment>
           </environments>
         </configuration>
