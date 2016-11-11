@@ -18,6 +18,7 @@ package org.everit.osgi.ecm.extender.ri.internal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -25,7 +26,6 @@ import org.everit.osgi.ecm.annotation.metadatabuilder.MetadataBuilder;
 import org.everit.osgi.ecm.component.ri.ComponentContainerFactory;
 import org.everit.osgi.ecm.component.ri.ComponentContainerInstance;
 import org.everit.osgi.ecm.extender.ECMExtenderConstants;
-import org.everit.osgi.ecm.extender.ri.ComponentClassNotFoundException;
 import org.everit.osgi.ecm.extender.ri.MissingClassAttributeException;
 import org.everit.osgi.ecm.metadata.ComponentMetadata;
 import org.osgi.framework.Bundle;
@@ -49,7 +49,7 @@ import aQute.bnd.annotation.headers.ProvideCapability;
 public class ECMCapabilityTracker extends BundleTracker<Bundle> {
 
   private final Map<Bundle, List<ComponentContainerInstance<?>>> activeComponentContainers =
-      new ConcurrentHashMap<Bundle, List<ComponentContainerInstance<?>>>();
+      new ConcurrentHashMap<>();
 
   private LogService logService;
 
@@ -62,14 +62,8 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
     this.logService = logService;
   }
 
-  @Override
-  public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
-    Collection<BundleRequirement> wiredRequirements = resolveWiredRequirements(bundle);
-
-    if (wiredRequirements.size() == 0) {
-      return null;
-    }
-
+  private List<ComponentContainerInstance<?>> addBundleRequirements(final Bundle bundle,
+      final Collection<BundleRequirement> wiredRequirements) {
     BundleWiring wiring = bundle.adapt(BundleWiring.class);
     ClassLoader classLoader = wiring.getClassLoader();
 
@@ -83,7 +77,7 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
     // Having two iterations separately as if there is an exception during generating the metadata
     // or loading the
     // class, none of the containers should be started.
-    List<ComponentContainerInstance<?>> containers = new ArrayList<ComponentContainerInstance<?>>();
+    List<ComponentContainerInstance<?>> containers = new ArrayList<>();
 
     for (BundleRequirement requirement : wiredRequirements) {
       Object classNameAttribute =
@@ -94,22 +88,51 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
       }
 
       String className = classNameAttribute.toString();
-      Class<?> clazz;
-      try {
-        clazz = classLoader.loadClass(className);
-      } catch (ClassNotFoundException e) {
-        throw new ComponentClassNotFoundException(requirement, e);
-      }
 
-      ComponentMetadata componentMetadata = MetadataBuilder.buildComponentMetadata(clazz);
+      ComponentMetadata componentMetadata =
+          MetadataBuilder.buildComponentMetadata(className, classLoader);
+
       ComponentContainerInstance<Object> containerInstance =
           factory.createComponentContainer(componentMetadata);
 
       containers.add(containerInstance);
     }
 
-    for (ComponentContainerInstance<?> container : containers) {
-      container.open();
+    ListIterator<ComponentContainerInstance<?>> iterator = containers.listIterator();
+    while (iterator.hasNext()) {
+      try {
+        ComponentContainerInstance<?> container = iterator.next();
+        container.open();
+      } catch (RuntimeException e) {
+        while (iterator.hasPrevious()) {
+          ComponentContainerInstance<?> container = iterator.previous();
+          try {
+            container.close();
+          } catch (RuntimeException suppressedE) {
+            e.addSuppressed(suppressedE);
+          }
+        }
+        throw e;
+      }
+    }
+    return containers;
+  }
+
+  @Override
+  public Bundle addingBundle(final Bundle bundle, final BundleEvent event) {
+    Collection<BundleRequirement> wiredRequirements = resolveWiredRequirements(bundle);
+
+    if (wiredRequirements.size() == 0) {
+      return null;
+    }
+
+    List<ComponentContainerInstance<?>> containers;
+    try {
+      containers = addBundleRequirements(bundle, wiredRequirements);
+    } catch (RuntimeException e) {
+      logService.log(LogService.LOG_ERROR, "Error during processing requirements of bundle: "
+          + bundle.getSymbolicName() + ":" + bundle.getVersion(), e);
+      return null;
     }
 
     activeComponentContainers.put(bundle, containers);
@@ -132,7 +155,7 @@ public class ECMCapabilityTracker extends BundleTracker<Bundle> {
     List<BundleWire> extenderWires =
         bundleWiring.getRequiredWires(ExtenderNamespace.EXTENDER_NAMESPACE);
 
-    Bundle extenderBundle = this.context.getBundle();
+    Bundle extenderBundle = context.getBundle();
 
     for (BundleWire bundleWire : extenderWires) {
       if (extenderBundle.equals(bundleWire.getProviderWiring().getBundle())) {
