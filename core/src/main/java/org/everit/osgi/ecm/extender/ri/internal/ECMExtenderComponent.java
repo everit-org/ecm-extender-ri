@@ -41,13 +41,23 @@ public class ECMExtenderComponent {
 
   private ECMCapabilityTracker tracker;
 
+  /**
+   * Opens {@link ECMCapabilityTracker} and initializes logService with java util implementation if
+   * one is not defined.
+   *
+   * @param context
+   *          The context of the extender bundle.
+   */
   public void activate(final BundleContext context) {
-    tracker = new ECMCapabilityTracker(context, logService);
-    tracker.open();
+    if (this.logService == null) {
+      this.logService = new JavaUtilLogService(ECMExtenderComponent.class.getName());
+    }
+    this.tracker = new ECMCapabilityTracker(context, this.logService);
+    this.tracker.open();
   }
 
   public void deactivate() {
-    tracker.close();
+    this.tracker.close();
   }
 
   public void setLogService(final LogService logService) {

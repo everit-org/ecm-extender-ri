@@ -35,7 +35,7 @@ import org.osgi.service.log.LogService;
  */
 public class ECMExtenderActivator implements BundleActivator {
 
-  private ComponentContainerInstance<Object> ecmExtenderComponent;
+  private ComponentContainerInstance<ECMExtenderComponent> ecmExtenderComponent;
 
   @Override
   public void start(final BundleContext context) throws Exception {
@@ -73,13 +73,13 @@ public class ECMExtenderActivator implements BundleActivator {
     }
 
     ComponentMetadata build = ecmExtenderComponentMetadataBuilder.build();
-    ecmExtenderComponent = factory.createComponentContainer(build);
-    ecmExtenderComponent.open();
+    this.ecmExtenderComponent = factory.createComponentContainer(build);
+    this.ecmExtenderComponent.open();
   }
 
   @Override
   public void stop(final BundleContext context) throws Exception {
-    ecmExtenderComponent.close();
+    this.ecmExtenderComponent.close();
   }
 
 }
